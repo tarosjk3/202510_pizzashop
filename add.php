@@ -1,4 +1,7 @@
 <?php
+
+require 'dbconnect.php';
+
 $errors = [
     'chef-name' => '',
     'pizza-name' => '',
@@ -50,19 +53,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
     // 2. ファイル（画像）のチェック
     // 2-1. ファイルのアップロードがあり、且つファイルのアップロードエラーをしていない
     var_dump($_FILES);
-    if($_FILES['pizza-img']['tmp_name'] !== '' && $_FILES['pizza-img']['error'] !== UPLOAD_ERR_NO_FILE) {
+    if ($_FILES['pizza-img']['tmp_name'] !== '' && $_FILES['pizza-img']['error'] !== UPLOAD_ERR_NO_FILE) {
         echo 'ファイルのアップロードがありました';
         // 2-2. ファイルのフォーマット(形式)チェック(JPG, PNG, GIFのいずれか)
         $imginfo = new finfo(FILEINFO_MIME_TYPE);
         $mimetype = $imginfo->file($_FILES['pizza-img']['tmp_name']);
         var_dump($mimetype);
         $ok_mimetype = ['image/jpg', 'image/png', 'image/gif'];
-        if(!in_array($mimetype, $ok_mimetype)) {
+        if (!in_array($mimetype, $ok_mimetype)) {
             $errors['pizza-img'] = '許可されていないファイル形式です(JPG, PNG, GIFのみ)';
         }
 
         // 2-3. ファイルのサイズが0ではないチェック
-        if($_FILES['pizza-img']['size'] === 0) {
+        if ($_FILES['pizza-img']['size'] === 0) {
             $errors['pizza-img'] = 'ファイルのサイズが0です';
         }
 
@@ -76,19 +79,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
 
         // 2-5. ファイルを移動して保存する
         $upload_success = move_uploaded_file($_FILES['pizza-img']['tmp_name'], 'uploads/' . $new_img_name);
-        if(!$upload_success) {
+        if (!$upload_success) {
             $errors['pizza-img'] = 'エラーがあったためアップロードできませんでした';
         }
     }
 
-    // 3. エラーメッセージの有無をチェックし、エラーがなければTOPページへリダイレクト
-    if( !array_filter($errors) ) {
-        header('Location:index.php');
-        exit; //プログラム処理終了
+    // 3. エラーメッセージの有無をチェックし、
+    // エラーがなければデータベースへデータを登録し、TOPページへリダイレクト
+    if (!array_filter($errors)) {
+        // 画像のアップロードの有無を判別
+        $is_image_uploaded = $_FILES['pizza-img']['tmp_name'] !== '';
+
+        // プリペアドステートメントを作成（画像アップロードの有無で切り分ける）
+        if ($is_image_uploaded) {
+            $stmt = $db->prepare('INSERT INTO pizzas(chef_name, pizza_name, toppings, image) VALUES(?,?,?,?);');
+        } else {
+            $stmt = $db->prepare('INSERT INTO pizzas(chef_name, pizza_name, toppings) VALUES(?,?,?);');
+        }
+        // 登録するデータの挿入
+        $stmt->bindValue(1, $_POST['chef-name11']);
+        $stmt->bindValue(2, $_POST['pizza-name']);
+        $stmt->bindValue(3, $_POST['toppings']);
+        if ($is_image_uploaded) {
+            $stmt->bindValue(4, $new_img_name);
+        }
+        try {}
+        // 登録の実行
+        $result = $stmt->execute();
+
+        // 登録が成功した場合
+        if ($result) {
+            header('Location:index.php');
+            exit; //プログラム処理終了
+        }
+
+        // 登録が失敗した場合
+        $insert_failed = 'データベースへの登録が失敗しました。' . $e->getMessage();
     }
 }
-
-
 ?>
 <?php
 $title = 'ピザの登録';
@@ -96,6 +124,17 @@ $title = 'ピザの登録';
 <?php include 'template/header.php'; ?>
 
 <div class="container">
+    <?php if (isset($insert_failed)): ?>
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2" />
+            </svg>
+            <div>
+                <?= htmlspecialchars($insert_failed); ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <h1 class="my-5 h4 text-center">ピザの登録</h1>
 
     <div class="row justify-content-center">
