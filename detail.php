@@ -2,15 +2,17 @@
 
 require 'dbconnect.php';
 
+// 削除用
+if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete-id'])) {
+    die('削除のプロセス');
+}
+
+// 表示用
 if (isset($_GET['id'])) {
 
     $stmt = $db->prepare('SELECT * FROM pizzas WHERE id = ?');
     $stmt->bindValue(1, $_GET['id']);
     $result = $stmt->execute();
-
-    // var_dump($result);
-    // var_dump($stmt->fetch());
-    // var_dump($stmt->fetch());
 
     // SQLが正常に実行され、データが取得できたら
     if ($result) {
@@ -50,6 +52,25 @@ $title = '';
                         <p class="card-text"><?= htmlspecialchars($pizza['toppings']); ?></p>
                         <p class="card-text">シェフ: <?= htmlspecialchars($pizza['chef_name']); ?></p>
                         <p class="card-text">登録日: <?= htmlspecialchars($pizza['created_at']); ?></p>
+                    </div>
+                    <div class="card-footer text-end">
+                        <form action="detail.php" method="post" id="delete-form">
+                            <input type="hidden" name="delete-id" value="<?= htmlspecialchars($pizza['id']); ?>">
+                            <button class="btn btn-danger" type="submit">削除</button>
+                        </form>
+                        <script>
+                            const deleteForm = document.querySelector('#delete-form');
+                            deleteForm.addEventListener('submit', e => {
+                                // フォームの送信をストップする(デフォルトの挙動をストップする)
+                                e.preventDefault();
+
+                                // ユーザーが削除を許可した場合のみ、フォームを送信する
+                                const confirmed = confirm('このピザのデータを本当に削除しますか?');
+                                if(confirmed) {
+                                    e.target.submit();
+                                }
+                            });
+                        </script>
                     </div>
                 </div>
             </div>
