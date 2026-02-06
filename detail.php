@@ -1,10 +1,28 @@
 <?php
 
+session_start();
+
 require 'dbconnect.php';
 
 // 削除用
-if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete-id'])) {
-    die('削除のプロセス');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete-id'])) {
+    // die('削除のプロセス');
+
+    $stmt = $db->prepare('DELETE FROM pizzas WHERE id = ?');
+    $stmt->bindValue(1, $_POST['delete-id']);
+
+    try {
+        $result = $stmt->execute();
+
+        if ($result && $stmt->rowCount() > 0) {
+            $_SESSION['delete-msg'] = true;
+
+            header('location: index.php');
+            exit;
+        }
+    } catch (PDOException $e) {
+        $delete_error = 'データが削除できませんでした';
+    }
 }
 
 // 表示用
@@ -32,6 +50,17 @@ $title = '';
 <?php include 'template/header.php'; ?>
 
 <div class="container">
+    <?php if (isset($delete_error)): ?>
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2" />
+            </svg>
+            <div>
+                <?= htmlspecialchars($delete_error); ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <h1 class="h2 text-center my-5">Pizza Detail</h1>
 
     <?php if ($pizza): ?>
@@ -54,7 +83,7 @@ $title = '';
                         <p class="card-text">登録日: <?= htmlspecialchars($pizza['created_at']); ?></p>
                     </div>
                     <div class="card-footer text-end">
-                        <form action="detail.php" method="post" id="delete-form">
+                        <form action="detail.php?id=<?= htmlspecialchars($pizza['id']); ?>" method="post" id="delete-form">
                             <input type="hidden" name="delete-id" value="<?= htmlspecialchars($pizza['id']); ?>">
                             <button class="btn btn-danger" type="submit">削除</button>
                         </form>
@@ -66,7 +95,7 @@ $title = '';
 
                                 // ユーザーが削除を許可した場合のみ、フォームを送信する
                                 const confirmed = confirm('このピザのデータを本当に削除しますか?');
-                                if(confirmed) {
+                                if (confirmed) {
                                     e.target.submit();
                                 }
                             });
