@@ -4,7 +4,7 @@
 require 'dbconnect.php';
 
 // データの取得
-$sql = 'SELECT id, pizza_name, toppings, image FROM pizzas';
+$sql = 'SELECT id, pizza_name, toppings, image FROM pizzas ORDER BY created_at DESC';
 $result = $db->query($sql);
 
 if ($result) {
@@ -31,10 +31,18 @@ $title = 'Pizzeria Interplan';
         <?php foreach ($pizzas as $pizza): ?>
             <div class="col-md-4 mb-4">
                 <div class="card">
-                    <img src="..." class="card-img-top" alt="...">
+                    <?php
+                        $pizza_img = '';
+                        if(is_null($pizza['image'])) {
+                            $pizza_img = 'default.png';
+                        } else {
+                            $pizza_img = $pizza['image'];
+                        }
+                    ?>
+                    <img src="uploads/<?= htmlspecialchars($pizza_img); ?>" class="card-img-top pizza-img" alt="">
                     <div class="card-body">
-                        <h2 class="card-title h4">ピザの名前</h2>
-                        <p class="card-text">トッピング</p>
+                        <h2 class="card-title h4"><?= htmlspecialchars($pizza['pizza_name']); ?></h2>
+                        <p class="card-text"><?= htmlspecialchars($pizza['toppings']); ?></p>
                         <a href="#" class="btn btn-primary">詳細</a>
                     </div>
                 </div>
