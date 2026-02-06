@@ -10,10 +10,6 @@ $result = $db->query($sql);
 if ($result) {
     // $result->fetch(); //１件取得
     $pizzas = $result->fetchAll(); // 全件取得
-
-    echo '<pre>';
-    var_dump($pizzas);
-    echo '</pre>';
 }
 
 // fetchを使って１件ずつ取り出す方法
@@ -43,7 +39,7 @@ $title = 'Pizzeria Interplan';
                     <div class="card-body">
                         <h2 class="card-title h4"><?= htmlspecialchars($pizza['pizza_name']); ?></h2>
                         <p class="card-text"><?= htmlspecialchars($pizza['toppings']); ?></p>
-                        <a href="#" class="btn btn-primary">詳細</a>
+                        <a href="detail.php?id=<?= htmlspecialchars($pizza['id']); ?>" class="btn btn-primary">詳細</a>
                     </div>
                 </div>
             </div>

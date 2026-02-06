@@ -52,13 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
 
     // 2. ファイル（画像）のチェック
     // 2-1. ファイルのアップロードがあり、且つファイルのアップロードエラーをしていない
-    var_dump($_FILES);
+    // var_dump($_FILES);
     if ($_FILES['pizza-img']['tmp_name'] !== '' && $_FILES['pizza-img']['error'] !== UPLOAD_ERR_NO_FILE) {
         echo 'ファイルのアップロードがありました';
         // 2-2. ファイルのフォーマット(形式)チェック(JPG, PNG, GIFのいずれか)
         $imginfo = new finfo(FILEINFO_MIME_TYPE);
         $mimetype = $imginfo->file($_FILES['pizza-img']['tmp_name']);
-        var_dump($mimetype);
+        // var_dump($mimetype);
         $ok_mimetype = ['image/jpg', 'image/png', 'image/gif'];
         if (!in_array($mimetype, $ok_mimetype)) {
             $errors['pizza-img'] = '許可されていないファイル形式です(JPG, PNG, GIFのみ)';
@@ -71,11 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
 
         // 2-4. ファイルの名前を作成する
         $upload_file_name = $_FILES['pizza-img']['name'];
-        var_dump(pathinfo($upload_file_name));
+        // var_dump(pathinfo($upload_file_name));
         $extension = pathinfo($upload_file_name)['extension'];
         // ランダムな文字列 + 拡張子 (例 asdf3q32sad.jpg)
         $new_img_name = uniqid() . '.' . $extension;
-        var_dump($new_img_name);
+        // var_dump($new_img_name);
 
         // 2-5. ファイルを移動して保存する
         $upload_success = move_uploaded_file($_FILES['pizza-img']['tmp_name'], 'uploads/' . $new_img_name);
@@ -97,24 +97,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
             $stmt = $db->prepare('INSERT INTO pizzas(chef_name, pizza_name, toppings) VALUES(?,?,?);');
         }
         // 登録するデータの挿入
-        $stmt->bindValue(1, $_POST['chef-name11']);
+        $stmt->bindValue(1, $_POST['chef-name']);
         $stmt->bindValue(2, $_POST['pizza-name']);
         $stmt->bindValue(3, $_POST['toppings']);
         if ($is_image_uploaded) {
             $stmt->bindValue(4, $new_img_name);
         }
-        try {}
-        // 登録の実行
-        $result = $stmt->execute();
-
-        // 登録が成功した場合
-        if ($result) {
-            header('Location:index.php');
-            exit; //プログラム処理終了
+        try {
+            // 登録の実行
+            $result = $stmt->execute();
+    
+            // 登録が成功した場合
+            if ($result) {
+                header('Location:index.php');
+                exit; //プログラム処理終了
+            }
+        } catch (PDOException $e) {
+            // 登録が失敗した場合
+            $insert_failed = 'データベースへの登録が失敗しました。' . $e->getMessage();
         }
 
-        // 登録が失敗した場合
-        $insert_failed = 'データベースへの登録が失敗しました。' . $e->getMessage();
     }
 }
 ?>
