@@ -35,7 +35,7 @@ $title = 'Pizzeria Interplan';
                             $pizza_img = $pizza['image'];
                         }
                     ?>
-                    <img src="uploads/<?= htmlspecialchars($pizza_img); ?>" class="card-img-top pizza-img" alt="">
+                    <a href="detail.php?id=<?= htmlspecialchars($pizza['id']); ?>"><img src="uploads/<?= htmlspecialchars($pizza_img); ?>" class="card-img-top pizza-img" alt=""></a>
                     <div class="card-body">
                         <h2 class="card-title h4"><?= htmlspecialchars($pizza['pizza_name']); ?></h2>
                         <p class="card-text"><?= htmlspecialchars($pizza['toppings']); ?></p>
