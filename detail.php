@@ -82,7 +82,9 @@ $title = '';
                         <p class="card-text">シェフ: <?= htmlspecialchars($pizza['chef_name']); ?></p>
                         <p class="card-text">登録日: <?= htmlspecialchars($pizza['created_at']); ?></p>
                     </div>
-                    <div class="card-footer text-end">
+                    <div class="card-footer text-end d-flex justify-content-end gap-2">
+                        <a href="update.php?id=<?= htmlspecialchars($pizza['id']); ?>" class="btn btn-primary">更新</a>    
+
                         <form action="detail.php?id=<?= htmlspecialchars($pizza['id']); ?>" method="post" id="delete-form">
                             <input type="hidden" name="delete-id" value="<?= htmlspecialchars($pizza['id']); ?>">
                             <button class="btn btn-danger" type="submit">削除</button>
